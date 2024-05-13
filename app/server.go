@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/codecrafters-io/http-server-starter-go/app/logic"
 )
@@ -26,6 +27,14 @@ func main() {
 
 	if path == "/" {
 		_, err = conn.Write([]byte(logic.CreateHTTPResponseString("1.1", "200", "OK", "", "")))
+		if err != nil {
+			fmt.Println("Error writing to connection: ", err.Error())
+			os.Exit(1)
+		}
+	} else if strings.HasPrefix(path, "/echo/") {
+		str := strings.TrimPrefix(path, "/echo/")
+		res := logic.CreateHTTPResponse(200, map[string]string{"Content-Type": "text/plain"}, str)
+		_, err = conn.Write([]byte(res))
 		if err != nil {
 			fmt.Println("Error writing to connection: ", err.Error())
 			os.Exit(1)
