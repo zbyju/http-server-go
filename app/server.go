@@ -24,6 +24,8 @@ func main() {
 
 	request := logic.GetHTTPRequest(conn)
 	path := logic.GetHTTPRequestPath(request)
+	_, headersStr, _ := logic.ParseHTTPRequestParts(request)
+	headers := logic.ParseHTTPRequest(headersStr)
 
 	if path == "/" {
 		_, err = conn.Write([]byte(logic.CreateHTTPResponseString("1.1", "200", "OK", "", "")))
@@ -34,6 +36,13 @@ func main() {
 	} else if strings.HasPrefix(path, "/echo/") {
 		str := strings.TrimPrefix(path, "/echo/")
 		res := logic.CreateHTTPResponse(200, map[string]string{"Content-Type": "text/plain"}, str)
+		_, err = conn.Write([]byte(res))
+		if err != nil {
+			fmt.Println("Error writing to connection: ", err.Error())
+			os.Exit(1)
+		}
+	} else if strings.HasPrefix(path, "/user-agent") {
+		res := logic.CreateHTTPResponse(200, map[string]string{"Content-Type": "text/plain"}, headers["User-Agent"])
 		_, err = conn.Write([]byte(res))
 		if err != nil {
 			fmt.Println("Error writing to connection: ", err.Error())

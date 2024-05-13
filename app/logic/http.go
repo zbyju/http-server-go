@@ -41,3 +41,24 @@ func GetHTTPRequest(conn net.Conn) string {
 	conn.Read(buf)
 	return string(buf[:])
 }
+
+func ParseHTTPRequestParts(request string) (string, string, string) {
+	split := strings.Split(request, "\r\n\r\n")
+	body := split[1]
+
+	lines := strings.Split(split[0], "\r\n")
+	requestLine := lines[0]
+	headers := strings.Join(lines[1:], "\r\n")
+
+	return requestLine, headers, body
+}
+
+func ParseHTTPHeaders(headerStr string) map[string]string {
+	lines := strings.Split(headerStr, "\r\n")
+	headers := make(map[string]string, 0)
+	for _, l := range lines {
+		split := strings.Split(l, ": ")
+		headers[split[0]] = split[1]
+	}
+	return headers
+}
