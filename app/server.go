@@ -25,7 +25,7 @@ func main() {
 	request := logic.GetHTTPRequest(conn)
 	path := logic.GetHTTPRequestPath(request)
 	_, headersStr, _ := logic.ParseHTTPRequestParts(request)
-	headers := logic.ParseHTTPRequest(headersStr)
+	headers := logic.ParseHTTPHeaders(headersStr)
 
 	if path == "/" {
 		_, err = conn.Write([]byte(logic.CreateHTTPResponseString("1.1", "200", "OK", "", "")))
