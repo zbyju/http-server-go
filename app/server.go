@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -45,7 +44,8 @@ func handleConnection(conn net.Conn) {
 
 	request := logic.GetHTTPRequest(conn)
 	path := logic.GetHTTPRequestPath(request)
-	_, headersStr, _ := logic.ParseHTTPRequestParts(request)
+	method := logic.GetHTTPRequestMethod(request)
+	_, headersStr, body := logic.ParseHTTPRequestParts(request)
 	headers := logic.ParseHTTPHeaders(headersStr)
 
 	if path == "/" {
@@ -62,6 +62,28 @@ func handleConnection(conn net.Conn) {
 			fmt.Println("Error writing to connection: ", err.Error())
 			os.Exit(1)
 		}
+	} else if strings.HasPrefix(path, "/files/") && method == "POST" {
+		str := strings.TrimPrefix(path, "/files/")
+		dir := GetInstance().Directory
+		filePath := filepath.Join(dir, str)
+
+		// Check if the file exists
+		var res string
+		content := []byte(body)
+
+		// Attempt to write to the file
+		err := os.WriteFile(filePath, content, 0644)
+		if err != nil {
+			res = logic.CreateHTTPResponse(500, map[string]string{}, "")
+		} else {
+			res = logic.CreateHTTPResponse(201, map[string]string{}, "")
+		}
+
+		_, err = conn.Write([]byte(res))
+		if err != nil {
+			fmt.Println("Error writing to connection: ", err.Error())
+			os.Exit(1)
+		}
 	} else if strings.HasPrefix(path, "/files/") {
 		str := strings.TrimPrefix(path, "/files/")
 		dir := GetInstance().Directory
@@ -69,7 +91,7 @@ func handleConnection(conn net.Conn) {
 
 		// Check if the file exists
 		var res string
-		content, err := ioutil.ReadFile(filePath)
+		content, err := os.ReadFile(filePath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				res = logic.CreateHTTPResponse(404, map[string]string{}, "")

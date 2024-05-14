@@ -36,10 +36,20 @@ func GetHTTPRequestPath(request string) string {
 	return splitRequestLine[1]
 }
 
+func GetHTTPRequestMethod(request string) string {
+	lines := strings.Split(request, "\r\n")
+	firstLine := strings.ReplaceAll(lines[0], "  ", " ")
+	splitRequestLine := strings.Split(firstLine, " ")
+	return splitRequestLine[0]
+}
+
 func GetHTTPRequest(conn net.Conn) string {
 	buf := make([]byte, 512)
 	conn.Read(buf)
-	return string(buf[:])
+	str := string(buf[:])
+	endIndex := strings.Index(str, "\x00")
+	str = str[0:endIndex]
+	return str
 }
 
 func ParseHTTPRequestParts(request string) (string, string, string) {
