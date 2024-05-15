@@ -42,6 +42,10 @@ func (server Server) handleConnection(conn net.Conn) {
 		response.Send(conn)
 	} else if isPrefixed, ending := request.PathStarts("/echo/"); isPrefixed {
 		headers := HTTPHeaders{"Content-Type": "text/plain"}
+		if request.Headers.GetHeader("Accept-Encoding") == "gzip" {
+			headers.SetHeader("Content-Encoding", "gzip")
+		}
+
 		response := HTTPResponse{Version: "1.1", StatusCode: 200, Headers: headers, Body: ending}
 		response.Send(conn)
 	} else if isPrefixed, ending := request.PathStarts("/files/"); request.Method == "POST" && isPrefixed {
@@ -69,7 +73,7 @@ func (server Server) handleConnection(conn net.Conn) {
 				response = HTTPResponse{Version: "1.1", StatusCode: 500}
 			}
 		} else {
-			response = HTTPResponse{Version: "1.1", StatusCode: 201, Headers: HTTPHeaders{"Content-Type": "application/octet-stream"}, Body: string(content)}
+			response = HTTPResponse{Version: "1.1", StatusCode: 200, Headers: HTTPHeaders{"Content-Type": "application/octet-stream"}, Body: string(content)}
 		}
 		response.Send(conn)
 	} else if isPrefixed, _ := request.PathStarts("/user-agent"); isPrefixed {
