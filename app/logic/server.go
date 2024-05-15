@@ -5,6 +5,8 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 )
 
 type Server struct {
@@ -42,7 +44,7 @@ func (server Server) handleConnection(conn net.Conn) {
 		response.Send(conn)
 	} else if isPrefixed, ending := request.PathStarts("/echo/"); isPrefixed {
 		headers := HTTPHeaders{"Content-Type": "text/plain"}
-		if request.Headers.GetHeader("Accept-Encoding") == "gzip" {
+		if split := strings.Split(request.Headers.GetHeader("Accept-Encoding"), ", "); slices.Contains(split, "gzip") {
 			headers.SetHeader("Content-Encoding", "gzip")
 		}
 
